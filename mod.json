@@ -2,14 +2,15 @@
   "$schema": "../sdk/schema/mod.json",
   "id": "wxl.unit-outline",
   "name": "Unit outline",
-  "version": "1.1.0",
-  "abi": "0.1.15",
+  "version": "1.2.0",
+  "abi": "0.1.20",
   "description": "Retail-style outline around units (mouseover, target, optionally nearby): green friendly, yellow neutral, red hostile. Options under Interface > Game > Unit Outlines.",
   "binaries": {
     "win-x64": "bin/x64/unit-outline.dll"
   },
   "requires": [
     { "service": "wxl.gx", "version": 1 },
+    { "service": "wxl.m2", "version": 1 },
     { "service": "wxl.script", "version": 1 },
     { "service": "wxl.object", "version": 1 }
   ]

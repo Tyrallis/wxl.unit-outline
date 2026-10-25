@@ -35,6 +35,7 @@
 #include "wxl/objects.hpp"
 #include "wxl/sdk.hpp"
 #include "wxl/services/gx.h"
+#include "wxl/services/m2.h"
 #include "wxl/services/script.hpp"
 
 namespace
@@ -138,6 +139,7 @@ namespace
     // --- Services -------------------------------------------------------------------------------
 
     wxl::Service<wxl_gx_api> g_gx(WXL_GX_SERVICE, WXL_GX_SERVICE_VERSION);
+    wxl::Service<wxl_m2_api> g_m2(WXL_M2_SERVICE, WXL_M2_SERVICE_VERSION);
     const wxl::ScriptService g_script;
 
     IDirect3DDevice9* Device()
@@ -560,8 +562,11 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
 
     // --- The silhouette: a watched batch drawn again into the mask ------------------------------
 
-    void WXL_CALL OnModelDraw(const wxl_gx_model_draw* draw, void*)
+    /// ModelBatchDrawn, subscribed raw: the batch the device just drew, everything it was drawn
+    /// with still bound.
+    void WXL_CALL OnModelDraw(void*, const void* args)
     {
+        const wxl_model_batch_args* draw = static_cast<const wxl_model_batch_args*>(args);
         if (g_outlinedCount == 0 || g_broken || !draw) return;
         ++g_stats.batches;
 
@@ -771,7 +776,7 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
                 const wxl::Object object = wxl::Object::Resolve(wanted.guid);
                 if (!object.HasHandle()) continue;
                 ++g_stats.resolved;
-                void* const root = g_gx->object_model(object.Handle());
+                void* const root = g_m2->object_model(object.Handle());
                 if (!root) continue;
                 ++g_stats.modeled;
                 AddOutlined(root, tint);
@@ -806,9 +811,9 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
                               [](const auto& a, const auto& b) { return a.first < b.first; });
             for (size_t i = 0; i < keep; ++i)
             {
-                const wxl::Expected<uint32_t> reaction = nearby[i].second.ReactionTo(me);
+                const auto reaction = nearby[i].second.ReactionTo(me);
                 if (!reaction) continue;
-                AddOutlined(g_gx->object_model(nearby[i].second.Handle()), TintOfNative(*reaction));
+                AddOutlined(g_m2->object_model(nearby[i].second.Handle()), TintOfNative(static_cast<uint32_t>(*reaction)));
             }
         }
 
@@ -827,20 +832,20 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
     OutlineLua    g_lua;
     OutlineWorld  g_world;
     OutlineRender g_render;
-    uint32_t      g_watch = 0;
+    wxl::Subscription g_draws;
 
     class UnitOutlineMod final : public wxl::Mod
     {
     public:
         wxl_result OnLoad() override
         {
-            if (!g_gx || !g_script)
+            if (!g_gx || !g_m2 || !g_script)
             {
-                wxl::Log(WXL_LOG_ERROR, kTag, "wxl.gx or wxl.script is not published; nothing to do");
+                wxl::Log(WXL_LOG_ERROR, kTag, "wxl.gx, wxl.m2 or wxl.script is not published; nothing to do");
                 return WXL_E_UNSUPPORTED;
             }
-            const wxl_result watched = g_gx->watch_model_draws(&OnModelDraw, nullptr, &g_watch);
-            if (watched != WXL_OK) return watched;
+            g_draws = wxl::Subscribe(WXL_EV_ModelBatchDrawn, &OnModelDraw, nullptr);
+            if (!g_draws) return WXL_E_UNSUPPORTED;
 
             LoadSettings();
             wxl::ScriptMgr::Add(&g_lua);
@@ -856,8 +861,7 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
 
         void OnUnload() override
         {
-            if (g_gx && g_watch) g_gx->unwatch_model_draws(g_watch);
-            g_watch = 0;
+            g_draws = wxl::Subscription();
             ReleaseAll();
         }
     };

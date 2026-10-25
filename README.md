@@ -20,14 +20,12 @@ The choices are saved to `<mod>\settings.ini` (`[Outline]`). Addons can read and
 
 ## Requirements
 
-The `wxl.gx`, `wxl.script` and `wxl.object` runtime services. `wxl.gx` is on the `x64-port` branch of
-[Tyrallis/client](https://github.com/Tyrallis/client/tree/x64-port), [Tyrallis/core](https://github.com/Tyrallis/core/tree/x64-port) and
-[Tyrallis/sdk](https://github.com/Tyrallis/sdk/tree/x64-port).
+The `wxl.gx`, `wxl.m2`, `wxl.script` and `wxl.object` services and the `ModelBatchDrawn` event: [WarcraftXL](https://github.com/WarcraftXL) main (ABI 0.1.20) or this fork's `x64-port`.
 
 ## Build
 
-Needs a checkout of the WarcraftXL SDK (`x64-port` branch) at `../sdk`, or pass `-DWXL_SDK_DIR=...`.
-Build with Visual Studio 2022: the 2026 Insiders compiler (MSVC 14.50) crashes on the SDK's headers. Since 1.1.0 the mod needs the client and SDK of `x64-port` at WarcraftXL ABI 0.1.15; older clients refuse it.
+Needs a checkout of the WarcraftXL SDK at `../sdk`, or pass `-DWXL_SDK_DIR=...`.
+Build with Visual Studio 2022: MSVC 14.50 (VS 2026 Insiders) crashes on the SDK's headers. Since 1.2.0 the mod needs ABI 0.1.20 (WarcraftXL main); older clients refuse it.
 
 ```
 cmake -S . -B build
