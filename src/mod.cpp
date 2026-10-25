@@ -714,11 +714,11 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
     class OutlineLua final : public wxl::LuaScript
     {
     public:
-        void OnScriptVmReady(const wxl_script_vm_args& args) override
+        void OnScriptVmReady(wxl_script_context context, void*) override
         {
             g_luaReady = false;
             g_wanted[0] = g_wanted[1] = Wanted{};
-            if (args.context != WXL_SCRIPT_CONTEXT_GAME) return;
+            if (context != WXL_SCRIPT_CONTEXT_GAME) return;
             if (g_script.RegisterFunction<&LuaUpdate>("WXL_UnitOutline_Update") != WXL_OK ||
                 g_script.RegisterFunction<&LuaError>("WXL_UnitOutline_Error") != WXL_OK ||
                 g_script.RegisterFunction<&LuaGet>("WXL_UnitOutline_Get") != WXL_OK ||
@@ -732,7 +732,7 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
                      g_luaReady ? "Lua side installed" : "Lua side did not run");
         }
 
-        void OnScriptVmClosing(const wxl_script_vm_args&) override
+        void OnScriptVmClosing(wxl_script_context, void*) override
         {
             g_luaReady = false;
             g_wanted[0] = g_wanted[1] = Wanted{};
@@ -742,18 +742,18 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
     class OutlineWorld final : public wxl::WorldScript
     {
     public:
-        void OnUpdate(const wxl_update_args&) override
+        void OnUpdate(float) override
         {
             if (g_luaReady) g_script.Run(kLuaTick, "unit-outline");
         }
 
-        void OnWorldLeave(const wxl_world_args&) override { g_wanted[0] = g_wanted[1] = Wanted{}; }
+        void OnWorldLeave(uint32_t, wxl_vec3) override { g_wanted[0] = g_wanted[1] = Wanted{}; }
     };
 
     class OutlineRender final : public wxl::RenderScript
     {
     public:
-        void OnWorldRenderBegin(const wxl_frame_args&) override
+        void OnWorldRenderBegin(uint64_t, float) override
         {
             g_maskCleared   = false;
             g_maskDrawn     = false;
@@ -812,16 +812,16 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
             }
         }
 
-        void OnWorldRenderEnd(const wxl_frame_args&) override
+        void OnWorldRenderEnd(uint64_t, float) override
         {
             if (g_maskDrawn) PaintEdges();
             g_outlinedCount = 0;
             FlushStats();
         }
 
-        void OnFrameBegin(const wxl_frame_args&) override { ++g_stats.paints; }
+        void OnFrameBegin(uint64_t, float) override { ++g_stats.paints; }
 
-        void OnSwapchainLost(const wxl_swapchain_args&) override { ReleaseTargets(); }
+        void OnSwapchainLost(uint32_t, uint32_t) override { ReleaseTargets(); }
     };
 
     OutlineLua    g_lua;
@@ -863,4 +863,4 @@ float4 main(float2 uv : TEXCOORD0, float2 px : TEXCOORD1) : COLOR {
     };
 }
 
-WXL_MOD(UnitOutlineMod, "wxl.unit-outline", "Unit outline", 1)
+WXL_MOD(UnitOutlineMod, "wxl.unit-outline", "Unit outline")
