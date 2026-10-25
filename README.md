@@ -20,13 +20,13 @@ The choices are saved to `<mod>\settings.ini` (`[Outline]`). Addons can read and
 
 ## Requirements
 
-The `wxl.gx`, `wxl.script` and `wxl.object` runtime services. `wxl.gx` is on the `mod-support` branch of
-[Tyrallis/client](https://github.com/Tyrallis/client), [Tyrallis/core](https://github.com/Tyrallis/core) and
-[Tyrallis/sdk](https://github.com/Tyrallis/sdk).
+The `wxl.gx`, `wxl.script` and `wxl.object` runtime services. `wxl.gx` is on the `x64-port` branch of
+[Tyrallis/client](https://github.com/Tyrallis/client/tree/x64-port), [Tyrallis/core](https://github.com/Tyrallis/core/tree/x64-port) and
+[Tyrallis/sdk](https://github.com/Tyrallis/sdk/tree/x64-port).
 
 ## Build
 
-Needs a checkout of the WarcraftXL SDK (`mod-support` branch) at `../sdk`, or pass `-DWXL_SDK_DIR=...`.
+Needs a checkout of the WarcraftXL SDK (`x64-port` branch) at `../sdk`, or pass `-DWXL_SDK_DIR=...`.
 
 ```
 cmake -S . -B build
